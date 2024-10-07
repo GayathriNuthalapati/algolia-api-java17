@@ -1,0 +1,15 @@
+name: Deploy MuleSoft Application
+ 
+on:
+  push:
+    branches:
+      - postman-test-coverage
+  pull_request:
+    branches:
+      - postman-test-coverage
+
+
+jobs:
+  call-workflow:
+    uses: GayathriNuthalapati/algolia-api/.github/workflows/reusableWorkflow.yml@postman-test-coverage
+    secrets: inherit
