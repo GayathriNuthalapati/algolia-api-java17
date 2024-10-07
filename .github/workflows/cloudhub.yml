@@ -3,10 +3,10 @@ name: Deploy MuleSoft Application
 on:
   push:
     branches:
-      - cloudhub2.0
+      - cloudhub
   pull_request:
     branches:
-      - cloudhub2.0
+      - cloudhub
 
 
 jobs:
