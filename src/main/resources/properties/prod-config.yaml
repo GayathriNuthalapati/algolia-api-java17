@@ -1,0 +1,11 @@
+api:
+  id: "19994146"
+  
+platform:
+  client_id: "![KLoWZEdaSUUZq/npjRHpNo/6T/DTkW9Mkup4lSLgDJSzXGyalj55Zg==]"
+  client_secret: "![93uOlcmvkLjqQhz3hjN0cjopSwBldNcKEwgdOd4yHQOXHOvImLyIoA==]"
+
+salesforce:
+  username: "![foKQrVSLEOjELQMJQyBlyhLg4YeStOrC7s3ShEPVyhc=]"
+  password: "![17JqNK8pShLXMoJm8CWKvg==]"
+  token: "![EOXYHtV5prFOkVsRK0YlNLQdrzbIUC38xr+ie1MsKEA=]"

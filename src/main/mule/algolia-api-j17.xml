@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="algolia-api-j17Flow" doc:id="ad370867-66d1-49f7-b7bc-ca0c9d047362" >
+		<http:listener doc:name="Listener" doc:id="b451a74a-37f7-4592-961d-c53f8d3cd5c8" path="/sf" config-ref="HTTP_Listener_config"/>
+		<salesforce:query doc:id="9ea24af5-5641-46fb-aa0c-3bc7873b85a9" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Id,Name__c,City__c,Pincode__c,State__c,Phone_Number__c FROM Address__c]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="3b08af42-f7b8-4b67-bbb8-bbb06854b7dd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
