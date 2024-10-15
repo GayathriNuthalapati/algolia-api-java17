@@ -153,8 +153,8 @@ jobs:
         curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
         -H "Content-Type: application/json" \
         -d '{
-          "client_id": "'"${{secrets.ANYPOINT_CLIENT_ID }}"'",
-          "client_secret": "'"${{ secrets.ANYPOINT_CLIENT_SECRET }}"'",
+          "client_id": "'"${{secrets.connected_app_client_id}}"'",
+          "client_secret": "'"${{secrets.connected_app_client_secret}}"'",
           "grant_type": "password",
           "username": "'"${{ secrets.ANYPOINT_USERNAME }}"'",
           "password": "'"${{ secrets.ANYPOINT_PASSWORD }}"'"
@@ -182,7 +182,7 @@ jobs:
         -H "Content-Type: multipart/form-data" \
         -F "file=@path/to/your-application.jar" \
         -F "target=private-cloudhub" \
-        -F "deploymentName=your-app-name" \
+        -F "deploymentName=algolia" \
         -F "privateSpaceId=${{ secrets.PRIVATE_SPACE_ID }}"
 
     - name: Clean up
