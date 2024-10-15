@@ -153,23 +153,13 @@ jobs:
           "password": "'"${{ secrets.ANYPOINT_PASSWORD }}"'"
         }' -o auth.json
 
-    - name: Extract Access Token
-      run: |
-        ACCESS_TOKEN=$(jq -r '.access_token' auth.json)
-        if [ -z "$ACCESS_TOKEN" ]; then
-          echo "Error: Failed to retrieve access token."
-          exit 1
-        fi
-        echo "Access token successfully retrieved."
-        echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
-
     - name: Upload Application Package to CloudHub 2.0
       env:
         ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
       run: |
         echo "Uploading Mule application to CloudHub 2.0..."
         curl -X POST https://anypoint.mulesoft.com/hybrid/api/v1/applications \
-        -H "Authorization: Bearer $ACCESS_TOKEN" \
+        -H "Authorization: Bearer d969bf80-cf70-4760-9eb9-a09f749c5e29" \
         -H "X-ANYPNT-ORG-ID: ${{ secrets.ANYPOINT_ORG_ID }}" \
         -H "X-ANYPNT-ENV-ID: ${{ secrets.ANYPOINT_ENVIRONMENT_ID }}" \
         -H "Content-Type: multipart/form-data" \
