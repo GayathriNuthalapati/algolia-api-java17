@@ -174,8 +174,8 @@ jobs:
         -H "X-ANYPNT-ENV-ID: ${{ secrets.ANYPOINT_ENVIRONMENT_ID }}" \
         -H "Content-Type: multipart/form-data" \
         -F "file=@path/to/your-application.jar" \
-        -F "target=private-cloudhub" \
-        -F "deploymentName=your-app-name" \
+        -F "target=indy-space" \
+        -F "deploymentName=algolia" \
         -F "privateSpaceId=${{ secrets.PRIVATE_SPACE_ID }}"
 
     - name: Clean up
