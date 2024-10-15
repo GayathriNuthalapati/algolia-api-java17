@@ -3,13 +3,13 @@ name: Deploy MuleSoft Application
 on:
   push:
     branches:
-      - cloudhub
+      - private-space
   pull_request:
     branches:
-      - cloudhub
+      - private-space
 
 
 jobs:
   call-workflow:
-    uses: GayathriNuthalapati/algolia-api-java17/.github/workflows/reusableWorkflow.yml@cloudhub
+    uses: GayathriNuthalapati/algolia-api-java17/.github/workflows/reusableWorkflow.yml@private-space
     secrets: inherit
