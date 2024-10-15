@@ -131,6 +131,7 @@ jobs:
           echo "Deploying application to dev"
           
   deploy:
+    needs: postman_tests
     runs-on: ubuntu-latest
 
     steps:
