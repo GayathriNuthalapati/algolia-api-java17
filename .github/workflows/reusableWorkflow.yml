@@ -156,8 +156,8 @@ jobs:
           -H "Content-Type: application/json" \
           -d '{
             "grant_type": "password",
-            "username": ${{ secrets.connected_app_client_id}},
-            "password": ${{ secrets.connected_app_client_secret}}
+            "username": "928c76d8ba0b4422863a79f6dd4756e5",
+            "password": "171ee964963847539F4ec674e97A0540"
           }' -o auth.json
           cat auth.json
   
