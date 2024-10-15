@@ -130,36 +130,43 @@ jobs:
         run: |
           echo "Deploying application to dev"
           
-  deploydev:
-    needs: postman_tests
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Node.js environment
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-
-    - name: Install dependencies
-      run: npm install
-
     - name: Authenticate with Anypoint Platform
       run: |
+        echo "Authenticating with Anypoint Platform..."
         curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
-          -H "Content-Type: application/json" \
-          -d '{
-            "client_id": "'"${{ secrets.ANYPOINT_CLIENT_ID }}"'",
-            "client_secret": "'"${{ secrets.ANYPOINT_CLIENT_SECRET }}"'",
-            "grant_type": "client_credentials"
-          }' -o auth.json
+        -H "Content-Type: application/json" \
+        -d '{
+          "client_id": "'"${{ secrets.ANYPOINT_CLIENT_ID }}"'",
+          "client_secret": "'"${{ secrets.ANYPOINT_CLIENT_SECRET }}"'",
+          "grant_type": "client_credentials"
+        }' -o auth.json
 
+    - name: Check Authentication Response
+      run: |
+        echo "Checking the authentication response..."
+        cat auth.json
 
-    - name: Deploy to Anypoint Platform
+    - name: Extract Access Token
       run: |
         ACCESS_TOKEN=$(jq -r '.access_token' auth.json)
+        if [ -z "$ACCESS_TOKEN" ]; then
+          echo "Error: Failed to retrieve access token."
+          exit 1
+        fi
+        echo "Access token successfully retrieved."
+
+    - name: Deploy to Anypoint Platform
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      run: |
+        echo "Deploying to Anypoint Platform..."
         curl -X POST https://anypoint.mulesoft.com/cloudhub/api/v2/applications \
         -H "Authorization: Bearer $ACCESS_TOKEN" \
         -H "Content-Type: application/json" \
@@ -173,5 +180,5 @@ jobs:
           }
         }'
 
-    - name: Clean up authentication file
+    - name: Clean up
       run: rm -f auth.json
