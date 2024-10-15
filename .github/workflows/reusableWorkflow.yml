@@ -130,6 +130,7 @@ jobs:
         run: |
           echo "Deploying application to dev"
           
+
   deploy:
     needs: postman_tests
     runs-on: ubuntu-latest
@@ -138,21 +139,26 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Set up Node.js environment
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install jq (for JSON parsing)
+      run: sudo apt-get install -y jq
+
     - name: Authenticate with Anypoint Platform
       run: |
         echo "Authenticating with Anypoint Platform..."
         curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
         -H "Content-Type: application/json" \
         -d '{
-          "client_id": "'"${{ secrets.ANYPOINT_CLIENT_ID }}"'",
+          "client_id": "'"${{secrets.ANYPOINT_CLIENT_ID }}"'",
           "client_secret": "'"${{ secrets.ANYPOINT_CLIENT_SECRET }}"'",
-          "grant_type": "client_credentials"
+          "grant_type": "password",
+          "username": "'"${{ secrets.ANYPOINT_USERNAME }}"'",
+          "password": "'"${{ secrets.ANYPOINT_PASSWORD }}"'"
         }' -o auth.json
-
-    - name: Check Authentication Response
-      run: |
-        echo "Checking the authentication response..."
-        cat auth.json
 
     - name: Extract Access Token
       run: |
@@ -162,24 +168,22 @@ jobs:
           exit 1
         fi
         echo "Access token successfully retrieved."
+        echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
 
-    - name: Deploy to Anypoint Platform
+    - name: Upload Application Package to CloudHub 2.0
       env:
-        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
       run: |
-        echo "Deploying to Anypoint Platform..."
-        curl -X POST https://anypoint.mulesoft.com/cloudhub/api/v2/applications \
+        echo "Uploading Mule application to CloudHub 2.0..."
+        curl -X POST https://anypoint.mulesoft.com/hybrid/api/v1/applications \
         -H "Authorization: Bearer $ACCESS_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d '{
-          "domain": "your-app-name",
-          "region": "us-east-1",
-          "workerSize": 0.1,
-          "workerCount": 1,
-          "properties": {
-            "anypoint.vpc.id": "your-vpc-id"
-          }
-        }'
+        -H "X-ANYPNT-ORG-ID: ${{ secrets.ANYPOINT_ORG_ID }}" \
+        -H "X-ANYPNT-ENV-ID: ${{ secrets.ANYPOINT_ENVIRONMENT_ID }}" \
+        -H "Content-Type: multipart/form-data" \
+        -F "file=@path/to/your-application.jar" \
+        -F "target=private-cloudhub" \
+        -F "deploymentName=your-app-name" \
+        -F "privateSpaceId=${{ secrets.PRIVATE_SPACE_ID }}"
 
     - name: Clean up
       run: rm -f auth.json
