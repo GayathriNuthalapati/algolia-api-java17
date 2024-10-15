@@ -3,10 +3,10 @@ name: Deploy MuleSoft Application
 on:
   push:
     branches:
-      - private-space
+      - private-spac
   pull_request:
     branches:
-      - private-space
+      - private-spac
 
 
 jobs:
