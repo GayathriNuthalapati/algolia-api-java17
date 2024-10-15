@@ -149,6 +149,17 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: artifacts
+      - name: Debug Authentication Response
+        run: |
+          echo "Checking authentication response..."
+          curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
+          -H "Content-Type: application/json" \
+          -d '{
+            "grant_type": "password",
+            "username": "'"${{ secrets.ANYPOINT_USERNAME }}"'",
+            "password": "'"${{ secrets.ANYPOINT_PASSWORD }}"'"
+          }' -o auth.json
+          cat auth.json
   
       - name: Deploy to CloudHub 2.0 Private Space
         env:
