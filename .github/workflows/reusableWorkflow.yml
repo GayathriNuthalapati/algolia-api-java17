@@ -134,11 +134,35 @@ jobs:
   deploy:
     needs: postman_tests
     runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
+    steps:    
+    - name: Checkout this repo
+      uses: actions/checkout@v3
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+    - uses: actions/download-artifact@v3
+      with:
+        name: artifacts
+    - name: Deploy to qa
+      env:
+        USERNAME: ${{ secrets.ANYPOINT_USERNAME }}
+        PASSWORD: ${{ secrets.ANYPOINT_PASSWORD}}
+        KEY: ${{ secrets.key }}    
+      run: |
+        artifactName=$(ls *.jar | head -1)
+        mvn deploy -DmuleDeploy \
+         -Dmule.artifact=$artifactName \
+         -Danypoint.username="$USERNAME" \
+         -Danypoint.password="$PASSWORD" \
+         -Ddecryption.key="$KEY" \
+         -Dmule.env=qa \
+         -Denv=qa \
+         -Dappname=algolia-app-qa 
+    
     - name: Install jq (for JSON parsing)
       run: sudo apt-get install -y jq
 
@@ -154,8 +178,6 @@ jobs:
         }' -o auth.json
 
     - name: Upload Application Package to CloudHub 2.0
-      env:
-        ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
       run: |
         echo "Uploading Mule application to CloudHub 2.0..."
         curl -X POST https://anypoint.mulesoft.com/hybrid/api/v1/applications \
