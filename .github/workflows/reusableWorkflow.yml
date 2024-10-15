@@ -131,65 +131,41 @@ jobs:
           echo "Deploying application to dev"
           
 
-  deploy:
+  deploydev:
     needs: postman_tests
     runs-on: ubuntu-latest
-    steps:    
-    - name: Checkout this repo
-      uses: actions/checkout@v3
-    - name: Cache dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
-    - uses: actions/download-artifact@v3
-      with:
-        name: artifacts
-    - name: Deploy to qa
-      env:
-        USERNAME: ${{ secrets.ANYPOINT_USERNAME }}
-        PASSWORD: ${{ secrets.ANYPOINT_PASSWORD}}
-        KEY: ${{ secrets.key }}    
-      run: |
-        artifactName=$(ls *.jar | head -1)
-        mvn deploy -DmuleDeploy \
-         -Dmule.artifact=$artifactName \
-         -Danypoint.username="$USERNAME" \
-         -Danypoint.password="$PASSWORD" \
-         -Ddecryption.key="$KEY" \
-         -Dmule.env=qa \
-         -Denv=qa \
-         -Dappname=algolia-app-qa 
-    
-    - name: Install jq (for JSON parsing)
-      run: sudo apt-get install -y jq
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v3
+  
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+  
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+  
+      - name: Deploy to CloudHub 2.0 Private Space
+        env:
+          USERNAME: ${{ secrets.ANYPOINT_USERNAME }}
+          PASSWORD: ${{ secrets.ANYPOINT_PASSWORD }}
+          KEY: ${{ secrets.key }}
+          PRIVATE_SPACE_ID: ${{ secrets.private_space_id }}
+        run: |
+          artifactName=$(ls *.jar | head -1)
+          mvn deploy -DmuleDeploy \
+           -Dmule.artifact=$artifactName \
+           -Danypoint.username="$USERNAME" \
+           -Danypoint.password="$PASSWORD" \
+           -Ddecryption.key="$KEY" \
+           -Dmule.env=dev \
+           -Denv=dev \
+           -Dappname=algolia-app-ps \
+           -Danypoint.platform.private_space_id="$PRIVATE_SPACE_ID"
 
-    - name: Authenticate with Anypoint Platform using Username and Password
-      run: |
-        echo "Authenticating with Anypoint Platform..."
-        curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
-        -H "Content-Type: application/json" \
-        -d '{
-          "grant_type": "password",
-          "username": "'"${{ secrets.ANYPOINT_USERNAME }}"'",
-          "password": "'"${{ secrets.ANYPOINT_PASSWORD }}"'"
-        }' -o auth.json
-
-    - name: Upload Application Package to CloudHub 2.0
-      run: |
-        echo "Uploading Mule application to CloudHub 2.0..."
-        curl -X POST https://anypoint.mulesoft.com/hybrid/api/v1/applications \
-        -H "Authorization: Bearer d969bf80-cf70-4760-9eb9-a09f749c5e29" \
-        -H "X-ANYPNT-ORG-ID: ${{ secrets.ANYPOINT_ORG_ID }}" \
-        -H "X-ANYPNT-ENV-ID: ${{ secrets.ANYPOINT_ENVIRONMENT_ID }}" \
-        -H "Content-Type: multipart/form-data" \
-        -F "file=@path/to/your-application.jar" \
-        -F "target=indy-space" \
-        -F "deploymentName=algolia" \
-        -F "privateSpaceId=${{ secrets.PRIVATE_SPACE_ID }}"
-
-    - name: Clean up
-      run: rm -f auth.json
 
