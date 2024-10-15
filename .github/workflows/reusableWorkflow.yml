@@ -149,12 +149,13 @@ jobs:
     - name: Authenticate with Anypoint Platform
       run: |
         curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
-        -H "Content-Type: application/json" \
-        -d '{
-          "client_id": "'"${{ secrets.ANYPOINT_CLIENT_ID }}"'",
-          "client_secret": "'"${{ secrets.ANYPOINT_CLIENT_SECRET }}"'",
-          "grant_type": "client_credentials"
-        }' -o auth.json
+          -H "Content-Type: application/json" \
+          -d '{
+            "client_id": "'"${{ secrets.ANYPOINT_CLIENT_ID }}"'",
+            "client_secret": "'"${{ secrets.ANYPOINT_CLIENT_SECRET }}"'",
+            "grant_type": "client_credentials"
+          }' -o auth.json
+
 
     - name: Deploy to Anypoint Platform
       run: |
