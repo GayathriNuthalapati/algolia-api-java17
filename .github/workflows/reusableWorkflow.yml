@@ -156,8 +156,8 @@ jobs:
           -H "Content-Type: application/json" \
           -d '{
             "grant_type": "password",
-            "username": "'"${{ secrets.ANYPOINT_USERNAME }}"'",
-            "password": "'"${{ secrets.ANYPOINT_PASSWORD }}"'"
+            "username": "Gayathri_Nuthalapati",
+            "password": "Pinky2615&"
           }' -o auth.json
           cat auth.json
   
