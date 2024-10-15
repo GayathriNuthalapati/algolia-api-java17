@@ -139,22 +139,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Node.js environment
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-
     - name: Install jq (for JSON parsing)
       run: sudo apt-get install -y jq
 
-    - name: Authenticate with Anypoint Platform
+    - name: Authenticate with Anypoint Platform using Username and Password
       run: |
         echo "Authenticating with Anypoint Platform..."
         curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
         -H "Content-Type: application/json" \
         -d '{
-          "client_id": "'"${{secrets.connected_app_client_id}}"'",
-          "client_secret": "'"${{secrets.connected_app_client_secret}}"'",
           "grant_type": "password",
           "username": "'"${{ secrets.ANYPOINT_USERNAME }}"'",
           "password": "'"${{ secrets.ANYPOINT_PASSWORD }}"'"
@@ -182,8 +175,9 @@ jobs:
         -H "Content-Type: multipart/form-data" \
         -F "file=@path/to/your-application.jar" \
         -F "target=private-cloudhub" \
-        -F "deploymentName=algolia" \
+        -F "deploymentName=your-app-name" \
         -F "privateSpaceId=${{ secrets.PRIVATE_SPACE_ID }}"
 
     - name: Clean up
       run: rm -f auth.json
+
