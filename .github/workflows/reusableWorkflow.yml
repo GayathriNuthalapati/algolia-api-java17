@@ -137,7 +137,7 @@ jobs:
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v3
-  
+   
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
@@ -145,21 +145,31 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-  
+   
       - uses: actions/download-artifact@v3
         with:
           name: artifacts
-      - name: Debug Authentication Response
+   
+      - name: Deploy to CloudHub 2.0 Private Space
+        env:
+          USERNAME: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
+          PASSWORD: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
+          KEY: ${{ secrets.key }}
+          API_ID: ${{ secrets.dev_api_id }}
+          PRIVATE_SPACE_ID: ${{ secrets.PRIVATE_SPACE_ID }}
         run: |
-          echo "Checking authentication response..."
-          curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
-          -H "Content-Type: application/json" \
-          -d '{
-            "grant_type": "password",
-            "username": "928c76d8ba0b4422863a79f6dd4756e5",
-            "password": "171ee964963847539F4ec674e97A0540"
-          }' -o auth.json
-          cat auth.json
+          artifactName=$(ls *.jar | head -1)
+          mvn deploy -DmuleDeploy \
+           -Dmule.artifact=$artifactName \
+           -Danypoint.username="$USERNAME" \
+           -Danypoint.password="$PASSWORD" \
+           -Ddecryption.key="$KEY" \
+           -Dmule.env=dev \
+           -Denv=dev \
+           -Dappname=algolia-app-dev \
+           -Danypoint.platform.client_id="$PLATFORM_CLIENT_ID" \
+           -Danypoint.platform.client_secret="$PLATFORM_CLIENT_SECRET" \
+           -Danypoint.platform.private_space_id="$PRIVATE_SPACE_ID"
   
  
 
