@@ -172,7 +172,7 @@ jobs:
           -Dappname=algolia-app-dev \
           -Danypoint.platform.client_id="$PLATFORM_CLIENT_ID" \
           -Danypoint.platform.client_secret="$PLATFORM_CLIENT_SECRET" \
-          -Danypoint.platform.private_space_id="$PRIVATE_SPACE_ID"
+          -Danypoint.platform.private_space_id="$PRIVATE_SPACE_ID" 
   
  
 
