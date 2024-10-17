@@ -134,42 +134,55 @@ jobs:
   deploydev:
     needs: build
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout this repo
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install jq (for JSON parsing)
+      run: sudo apt-get install -y jq
+
+    - name: Authenticate with Anypoint Platform using Username and Password
+      run: |
+        echo "Authenticating with Anypoint Platform..."
+        curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
+        -H "Content-Type: application/json" \
+        -d '{
+          "grant_type": "password",
+          "username": "'"${{ secrets.ANYPOINT_USERNAME }}"'",
+          "password": "'"${{ secrets.ANYPOINT_PASSWORD }}"'"
+        }' -o auth.json
+
+    - name: Extract Access Token
+      run: |
+        ACCESS_TOKEN=$(jq -r '.access_token' auth.json)
+        if [ -z "$ACCESS_TOKEN" ]; then
+          echo "Error: Failed to retrieve access token."
+          exit 1
+        fi
+        echo "Access token successfully retrieved."
+        echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
    
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-   
-      - uses: actions/download-artifact@v3
-        with:
-          name: artifacts
-   
-      - name: Deploy to CloudHub 2.0 Private Space
-        env:
-          USERNAME: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
-          PASSWORD: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
-          KEY: ${{ secrets.key }}
-          API_ID: ${{ secrets.dev_api_id }}
-          PRIVATE_SPACE_ID: ${{ secrets.PRIVATE_SPACE_ID }}
-        run: |
-          artifactName=$(ls *.jar | head -1)
-          mvn deploy -DmuleDeploy \
-           -Dmule.artifact=$artifactName \
-           -Danypoint.username="$USERNAME" \
-           -Danypoint.password="$PASSWORD" \
-           -Ddecryption.key="$KEY" \
-           -Dmule.env=dev \
-           -Denv=dev \
-           -Dappname=algolia-app-dev \
-           -Danypoint.platform.client_id="$PLATFORM_CLIENT_ID" \
-           -Danypoint.platform.client_secret="$PLATFORM_CLIENT_SECRET" \
-           -Danypoint.platform.private_space_id="$PRIVATE_SPACE_ID"
+    - name: Deploy to CloudHub 2.0 Private Space
+      env:
+         USERNAME: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
+         PASSWORD: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
+         KEY: ${{ secrets.key }}
+         API_ID: ${{ secrets.dev_api_id }}
+         PRIVATE_SPACE_ID: ${{ secrets.PRIVATE_SPACE_ID }}
+      run: |
+         artifactName=$(ls *.jar | head -1)
+         mvn deploy -DmuleDeploy \
+          -Dmule.artifact=$artifactName \
+          -Danypoint.username="$USERNAME" \
+          -Danypoint.password="$PASSWORD" \
+          -Ddecryption.key="$KEY" \
+          -Dmule.env=dev \
+          -Denv=dev \
+          -Dappname=algolia-app-dev \
+          -Danypoint.platform.client_id="$PLATFORM_CLIENT_ID" \
+          -Danypoint.platform.client_secret="$PLATFORM_CLIENT_SECRET" \
+          -Danypoint.platform.private_space_id="$PRIVATE_SPACE_ID"
   
  
 
