@@ -44,46 +44,123 @@ jobs:
           name: artifacts
           path: target/*.jar
 
+  # postman_tests:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # Step 1: Check out the repository
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
 
+  #     # Step 2: Set up Node.js
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: '16'
+
+  #     # Step 3: Install dependencies (Newman and HTML Reporter)
+  #     - name: Install Newman
+  #       run: npm install -g newman newman-reporter-html
+
+  #     # Step 4: Run the Postman collection and generate HTML report (continue on error)
+  #     - name: Run Postman Collection and Generate HTML Report
+  #       continue-on-error: true  # Continue even if there are errors
+  #       run: |
+  #         npx newman run postman/sys-api-oauth.postman_collection.json \
+  #         --environment postman/sys-api-oauth.postman_environment.json \
+  #         --reporters cli,html,json \
+  #         --reporter-html-export newman/newman-report.html \
+  #         --reporter-json-export newman/newman-temp-report.json
+
+  #    # Step 5: Calculate Test Coverage Based on Newman JSON Report
+  #     - name: Calculate Test Coverage
+  #       id: coverage
+  #       run: |
+  #         # Extract total and failed assertions using jq
+  #         TOTAL_ASSERTIONS=$(jq '.run.stats.assertions.total' newman/newman-temp-report.json)
+  #         FAILED_ASSERTIONS=$(jq '.run.stats.assertions.failed' newman/newman-temp-report.json)
+
+  #         # Debug: Print extracted values
+  #         echo "Total Assertions: $TOTAL_ASSERTIONS"
+  #         echo "Failed Assertions: $FAILED_ASSERTIONS"
+
+  #         # Check if values were correctly extracted
+  #         if [ -z "$TOTAL_ASSERTIONS" ] || [ -z "$FAILED_ASSERTIONS" ]; then
+  #           echo "Error: Failed to extract assertion stats from the Newman report."
+  #           exit 1
+  #         fi
+
+  #         # Calculate passed assertions
+  #         PASSED_ASSERTIONS=$(($TOTAL_ASSERTIONS - $FAILED_ASSERTIONS))
+
+  #         # Debug: Print passed assertion count
+  #         echo "Passed Assertions: $PASSED_ASSERTIONS"
+
+  #         # Calculate coverage percentage
+  #         COVERAGE=$(echo "scale=2; ($PASSED_ASSERTIONS / $TOTAL_ASSERTIONS) * 100" | bc)
+
+  #         # Fail the workflow if coverage is less than 80%
+  #         if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+  #           echo "Test coverage is below 80% ($COVERAGE%)"
+  #           exit 1
+  #         else
+  #           echo "Test coverage is above 80% ($COVERAGE%)"
+  #           echo "Total Assertions: $TOTAL_ASSERTIONS"
+  #           echo "Passed Assertions: $PASSED_ASSERTIONS"
+  #           echo "Coverage: $COVERAGE%"
+  #         fi
+
+  #     # Step 6: Upload HTML Report as an Artifact
+  #     - name: Upload HTML Report
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: newman-html-report
+  #         path: newman/newman-report.html
           
-  deploy:
+  #     # Step 7: Upload JSON Report as an Artifact
+  #     - name: Upload JSON Report
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: newman-json-report
+  #         path: newman/newman-temp-report.json
+
+  #     # Step 8: Deploy Only if Coverage is Greater Than 80%
+  #     - name: Deploy Application
+  #       if: success()  # Proceed only if the coverage is above 80%
+  #       run: |
+  #         echo "Deploying application to dev"
+          
+
+  deploydev:
     needs: build
     runs-on: ubuntu-latest
-
-    env:
-      CONNECTED_APP_CLIENT_ID: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
-      CONNECTED_APP_CLIENT_SECRET: ${{ CONNECTED_APP_CLIENT_SECRET }}
-      ANYPOINT_ORG_ID: ${{ secrets.ANYPOINT_ORG_ID }}
-      ANYPOINT_ENV: ${{ secrets.ANYPOINT_ENVIRONMENT_ID }}
-      ANYPOINT_PRIVATE_SPACE_ID: ${{ secrets.ANYPOINT_PRIVATE_SPACE_ID }}
-
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v2
+      - name: Checkout this repo
+        uses: actions/checkout@v3
+  
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+  
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+      - name: Debug Authentication Response
+        run: |
+          echo "Checking authentication response..."
+          curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
+          -H "Content-Type: application/json" \
+          -d '{
+            "grant_type": "password",
+            "username": "928c76d8ba0b4422863a79f6dd4756e5",
+            "password": "171ee964963847539F4ec674e97A0540"
+          }' -o auth.json
+          cat auth.json
+  
+ 
 
-    - name: Set up JDK 11
-      uses: actions/setup-java@v2
-      with:
-        java-version: '11'
 
-    - name: Build with Maven
-      run: mvn clean package
-
-    - name: Install Anypoint CLI
-      run: |
-        curl -L https://anypoint.mulesoft.com/downloads/cli/anypoint-cli-linux-64.zip -o anypoint-cli.zip
-        unzip anypoint-cli.zip -d anypoint-cli
-        sudo mv anypoint-cli/bin/anypoint-cli /usr/local/bin/
-
-    - name: Authenticate with Anypoint
-      run: |
-        anypoint-cli --username="$CONNECTED_APP_CLIENT_ID" --password="$CONNECTED_APP_CLIENT_SECRET" --organization="$ANYPOINT_ORG_ID" --environment="$ANYPOINT_ENVIRONMENT_ID" login
-
-    - name: Deploy Application to Private Space
-      run: |
-        anypoint-cli runtime-mgr cloudhub-application deploy \
-          --name="demo_deploy" \
-          --region="us-east-1" \
-          --workers=1 \
-          --workerType="Micro" \
-          --private-space-id="$ANYPOINT_PRIVATE_SPACE_ID"
