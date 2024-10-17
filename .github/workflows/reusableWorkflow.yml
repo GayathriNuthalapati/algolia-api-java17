@@ -1,9 +1,7 @@
-name: MuleSoft Deployment to Private Space
-
+name: Reusable Workflow To Deploy MuleSoft Application
+ 
 on:
-  push:
-    branches:
-      - private-space
+  workflow_call:
 
 jobs:
   build:
