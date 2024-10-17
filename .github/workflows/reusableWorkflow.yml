@@ -152,16 +152,6 @@ jobs:
           "username": "'"${{ secrets.ANYPOINT_USERNAME }}"'",
           "password": "'"${{ secrets.ANYPOINT_PASSWORD }}"'"
         }' -o auth.json
-
-    - name: Extract Access Token
-      run: |
-        ACCESS_TOKEN=$(jq -r '.access_token' auth.json)
-        if [ -z "$ACCESS_TOKEN" ]; then
-          echo "Error: Failed to retrieve access token."
-          exit 1
-        fi
-        echo "Access token successfully retrieved."
-        echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
    
     - name: Deploy to CloudHub 2.0 Private Space
       env:
